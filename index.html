@@ -6,21 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <script>
-  (function () {
-    // If verified links are working, this page won't even open.
-    // If it DOES open (app not installed or verification not done), jump to Play Store instantly.
-    var ua = navigator.userAgent || "";
-    var isAndroid = /Android/i.test(ua);
+(function () {
+  var ua = navigator.userAgent || "";
+  var isAndroid = /Android/i.test(ua);
+  if (!isAndroid) return;
 
-    if (isAndroid) {
-      // WhatsApp placeholder – replace later with your own package ID when published
-      try { window.location.replace("market://details?id=com.whatsapp"); } catch (e) {}
-      setTimeout(function () {
-        try { window.location.replace("https://play.google.com/store/apps/details?id=com.whatsapp"); } catch (e) {}
-      }, 150);
-    }
-  })();
-  </script>
+  // Read ?gallery=...
+  var params = new URLSearchParams(window.location.search);
+  var galleryId = params.get('gallery') || 'unknown';
+
+  // 1) Try to open the app directly via Android Intent URL (works even if Chrome is default)
+  //    This targets your custom scheme "ratedq://" and your package "com.ratedq.app.ratedq".
+  //    If the app is installed, Chrome opens it. If not, Chrome will use browser_fallback_url.
+  var fallback = encodeURIComponent("https://play.google.com/store/apps/details?id=com.whatsapp"); // placeholder
+  var intentUrl = "intent://gallery/" + encodeURIComponent(galleryId)
+      + "#Intent;scheme=ratedq;package=com.ratedq.app.ratedq;"
+      + "S.browser_fallback_url=" + fallback + ";end";
+
+  // Kick off immediately
+  window.location.href = intentUrl;
+
+  // 2) Safety net: in case the browser ignores intent (rare), try Play Store app then web
+  setTimeout(function () {
+    try { window.location.replace("market://details?id=com.whatsapp"); } catch (e) {}
+    setTimeout(function () {
+      try { window.location.replace("https://play.google.com/store/apps/details?id=com.whatsapp"); } catch (e) {}
+    }, 250);
+  }, 600);
+})();
+</script>
+
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -46,3 +61,4 @@
   </div>
 </body>
 </html>
+
