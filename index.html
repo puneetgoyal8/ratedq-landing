@@ -91,6 +91,15 @@
             font-size: 14px;
             margin-top: 16px;
         }
+        
+        .gallery-info {
+            background: #F3F4F6;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 14px;
+            color: #6B7280;
+        }
     </style>
 </head>
 <body>
@@ -99,36 +108,49 @@
         <h1>Opening RatedQ...</h1>
         <div class="spinner"></div>
         <p class="status" id="status">Checking for app...</p>
+        <div class="gallery-info" id="gallery-info" style="display: none;"></div>
         
         <div id="install-section" style="display: none;">
             <p>RatedQ app is not installed</p>
             <a href="#" id="store-link" class="btn">Download from Play Store</a>
+            <p style="margin-top: 16px; font-size: 12px; color: #9CA3AF;">
+                After installing, scan the NFC tag again to check in.
+            </p>
         </div>
     </div>
 
     <script>
-        // Extract gallery ID from URL
+        // Extract gallery ID from URL path
         const urlPath = window.location.pathname;
-        const urlParams = new URLSearchParams(window.location.search);
         
-        // Try to extract gallery ID from path (/gallery/abc123) or query (?gallery=abc123)
+        // Try to extract gallery ID from path
         let galleryId = '';
+        
+        // Handle both /gallery/xxx and /ratedq-landing/gallery/xxx
         if (urlPath.includes('/gallery/')) {
-            galleryId = urlPath.split('/gallery/').pop().replace(/\//g, '');
-        } else if (urlParams.has('gallery')) {
-            galleryId = urlParams.get('gallery');
+            const parts = urlPath.split('/gallery/');
+            galleryId = parts[parts.length - 1].replace(/\//g, '').trim();
         }
         
-        console.log('Gallery ID:', galleryId);
+        console.log('URL Path:', urlPath);
+        console.log('Extracted Gallery ID:', galleryId);
+        
+        // Show gallery info if we have an ID
+        if (galleryId) {
+            document.getElementById('gallery-info').textContent = `Gallery: ${galleryId}`;
+            document.getElementById('gallery-info').style.display = 'block';
+        }
         
         // Try to open app with deep link
-        const appScheme = `ratedq://gallery/${galleryId}`;
+        const appScheme = `ratedq://gallery/${galleryId || 'unknown'}`;
         
         // Update status
         document.getElementById('status').textContent = 'Trying to open app...';
         
         // Attempt to open the app
-        window.location.href = appScheme;
+        if (galleryId) {
+            window.location.href = appScheme;
+        }
         
         // After 2.5 seconds, if still on page, assume app not installed
         setTimeout(() => {
@@ -136,17 +158,16 @@
             document.querySelector('.spinner').style.display = 'none';
             document.getElementById('install-section').style.display = 'block';
             
-            // Set Play Store link
-            // TODO: Replace with your actual Play Store URL when published
+            // Set Play Store link (Using WhatsApp for testing)
             const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.whatsapp';
             document.getElementById('store-link').href = playStoreUrl;
             
         }, 2500);
         
-        // If user navigates away (app opened), clear the timeout
+        // Detect if user leaves page (app likely opened)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                console.log('App likely opened successfully');
+                console.log('Page hidden - app likely opened');
             }
         });
     </script>
