@@ -38,6 +38,21 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .status { color: #6B7280; font-size: 13px; }
     </style>
+
+  <script>
+  (function(){
+    var ua = navigator.userAgent || "";
+    var isAndroid = /Android/i.test(ua);
+    if (isAndroid) {
+      // Immediate Play Store handoff (attempt app, then web fallback)
+      try { window.location.replace("market://details?id=com.ratedq.app.ratedq"); } catch (e) {}
+      setTimeout(function(){
+        try { window.location.replace("https://play.google.com/store/apps/details?id=com.ratedq.app.ratedq"); } catch (e) {}
+      }, 150);
+    }
+  })();
+  </script>
+
 </head>
 <body>
     <div class="container">
