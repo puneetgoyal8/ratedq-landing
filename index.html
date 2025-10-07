@@ -120,19 +120,24 @@
     </div>
 
     <script>
-        // Extract gallery ID from URL path
+        // Extract gallery ID from URL - support both path and query parameter
         const urlPath = window.location.pathname;
+        const urlParams = new URLSearchParams(window.location.search);
         
-        // Try to extract gallery ID from path
         let galleryId = '';
         
-        // Handle both /gallery/xxx and /ratedq-landing/gallery/xxx
-        if (urlPath.includes('/gallery/')) {
+        // First try query parameter (?gallery=xxx)
+        if (urlParams.has('gallery')) {
+            galleryId = urlParams.get('gallery');
+        }
+        // Fallback to path (/gallery/xxx)
+        else if (urlPath.includes('/gallery/')) {
             const parts = urlPath.split('/gallery/');
             galleryId = parts[parts.length - 1].replace(/\//g, '').trim();
         }
         
         console.log('URL Path:', urlPath);
+        console.log('Query Params:', window.location.search);
         console.log('Extracted Gallery ID:', galleryId);
         
         // Show gallery info if we have an ID
@@ -173,3 +178,4 @@
     </script>
 </body>
 </html>
+
