@@ -4,172 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Opening RatedQ...</title>
+    <meta http-equiv="refresh" content="3;url=https://play.google.com/store/apps/details?id=com.whatsapp">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
-        
         .container {
             background: white;
-            border-radius: 24px;
-            padding: 40px;
-            max-width: 400px;
+            border-radius: 20px;
+            padding: 30px;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            opacity: 0;
-            animation: fadeIn 0.3s ease-in forwards;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-        
         .logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #6366F1, #4F46E5);
-            border-radius: 50%;
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
+            font-size: 40px;
+            margin-bottom: 15px;
         }
-        
-        h1 {
-            font-size: 20px;
-            color: #111827;
-            margin-bottom: 8px;
-        }
-        
+        h1 { font-size: 22px; color: #111827; margin-bottom: 10px; }
         .spinner {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
+            width: 30px; height: 30px;
             border: 3px solid #f3f4f6;
             border-top-color: #6366F1;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 16px auto;
+            animation: spin 0.8s linear infinite;
+            margin: 15px auto;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .status {
-            color: #6B7280;
-            font-size: 14px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status { color: #6B7280; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">📱</div>
-        <h1>Opening RatedQ...</h1>
+        <h1 id="title">Opening RatedQ...</h1>
         <div class="spinner"></div>
         <p class="status" id="status">Please wait...</p>
     </div>
 
     <script>
-        // Extract gallery ID from URL
+        // Extract gallery ID
         const urlParams = new URLSearchParams(window.location.search);
-        const urlPath = window.location.pathname;
-        
-        let galleryId = '';
-        
-        // Try query parameter first (?gallery=xxx)
-        if (urlParams.has('gallery')) {
-            galleryId = urlParams.get('gallery');
-        }
-        // Fallback to path (/gallery/xxx)
-        else if (urlPath.includes('/gallery/')) {
-            const parts = urlPath.split('/gallery/');
-            galleryId = parts[parts.length - 1].replace(/\//g, '').trim();
-        }
-        
-        console.log('Gallery ID:', galleryId);
-        
-        // Detect platform
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isIOS = /iphone|ipad|ipod/.test(userAgent);
-        const isAndroid = /android/.test(userAgent);
-        
-        console.log('Platform - iOS:', isIOS, 'Android:', isAndroid);
-        
-        // App store URLs
-        const androidStoreUrl = 'https://play.google.com/store/apps/details?id=com.whatsapp'; // Replace with your app
-        const iosStoreUrl = 'https://apps.apple.com/app/whatsapp-messenger/id310633997'; // Replace with your app
+        const galleryId = urlParams.get('gallery') || 'unknown';
         
         // Deep link
-        const appScheme = `ratedq://gallery/${galleryId || 'unknown'}`;
+        const appScheme = `ratedq://gallery/${galleryId}`;
         
-        // Try to open the app
-        let appOpened = false;
+        // Store URLs
+        const androidStore = 'https://play.google.com/store/apps/details?id=com.whatsapp'; // TODO: Replace
+        const iosStore = 'https://apps.apple.com/app/whatsapp-messenger/id310633997'; // TODO: Replace
         
-        // Attempt to open app via deep link
-        const attemptAppOpen = () => {
-            document.getElementById('status').textContent = 'Opening app...';
-            
-            // Create invisible iframe to trigger deep link (more reliable)
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = appScheme;
-            document.body.appendChild(iframe);
-            
-            // Also try direct navigation (fallback)
-            setTimeout(() => {
-                window.location.href = appScheme;
-            }, 100);
-        };
+        // Detect platform
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const storeUrl = isIOS ? iosStore : androidStore;
         
-        // Auto-redirect to store after timeout
-        const redirectToStore = () => {
-            setTimeout(() => {
-                // If still on page after 2 seconds, assume app not installed
-                if (!document.hidden) {
-                    document.getElementById('status').textContent = 'Redirecting to store...';
-                    
-                    // Redirect based on platform
-                    if (isIOS) {
-                        window.location.href = iosStoreUrl;
-                    } else if (isAndroid) {
-                        window.location.href = androidStoreUrl;
-                    } else {
-                        // Desktop or unknown - show Android store
-                        window.location.href = androidStoreUrl;
-                    }
-                }
-            }, 2000);
-        };
+        // Track if app opened
+        let redirected = false;
         
-        // Track if page becomes hidden (app likely opened)
+        // Try to open app immediately
+        window.location.href = appScheme;
+        
+        // If still on page after 1.5 seconds, redirect to store
+        setTimeout(() => {
+            if (!document.hidden && !redirected) {
+                document.getElementById('title').textContent = 'App not installed';
+                document.getElementById('status').textContent = 'Redirecting to store...';
+                redirected = true;
+                window.location.href = storeUrl;
+            }
+        }, 1500);
+        
+        // Detect if page hidden (app opened)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                appOpened = true;
-                console.log('App opened successfully');
+                redirected = true;
             }
-        });
-        
-        // Start the process
-        attemptAppOpen();
-        redirectToStore();
-        
-        // Also try using window blur detection (some browsers)
-        window.addEventListener('blur', () => {
-            appOpened = true;
         });
     </script>
 </body>
