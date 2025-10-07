@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RatedQ - Gallery Check-in</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+        
+        p {
+            color: #6B7280;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top-color: #6366F1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .status {
+            color: #6B7280;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱</div>
+        <h1>Opening RatedQ...</h1>
+        <div class="spinner"></div>
+        <p class="status" id="status">Checking for app...</p>
+        
+        <div id="install-section" style="display: none;">
+            <p>RatedQ app is not installed</p>
+            <a href="#" id="store-link" class="btn">Download from Play Store</a>
+        </div>
+    </div>
+
+    <script>
+        // Extract gallery ID from URL
+        const urlPath = window.location.pathname;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Try to extract gallery ID from path (/gallery/abc123) or query (?gallery=abc123)
+        let galleryId = '';
+        if (urlPath.includes('/gallery/')) {
+            galleryId = urlPath.split('/gallery/').pop().replace(/\//g, '');
+        } else if (urlParams.has('gallery')) {
+            galleryId = urlParams.get('gallery');
+        }
+        
+        console.log('Gallery ID:', galleryId);
+        
+        // Try to open app with deep link
+        const appScheme = `ratedq://gallery/${galleryId}`;
+        
+        // Update status
+        document.getElementById('status').textContent = 'Trying to open app...';
+        
+        // Attempt to open the app
+        window.location.href = appScheme;
+        
+        // After 2.5 seconds, if still on page, assume app not installed
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'App not found';
+            document.querySelector('.spinner').style.display = 'none';
+            document.getElementById('install-section').style.display = 'block';
+            
+            // Set Play Store link
+            // TODO: Replace with your actual Play Store URL when published
+            const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.whatsapp';
+            document.getElementById('store-link').href = playStoreUrl;
+            
+        }, 2500);
+        
+        // If user navigates away (app opened), clear the timeout
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('App likely opened successfully');
+            }
+        });
+    </script>
+</body>
+</html>
