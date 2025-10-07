@@ -1,64 +1,129 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Opening RatedQ…</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var isAndroid = /Android/i.test(ua);
-  if (!isAndroid) return;
-
-  // Read ?gallery=...
-  var params = new URLSearchParams(window.location.search);
-  var galleryId = params.get('gallery') || 'unknown';
-
-  // 1) Try to open the app directly via Android Intent URL (works even if Chrome is default)
-  //    This targets your custom scheme "ratedq://" and your package "com.ratedq.app.ratedq".
-  //    If the app is installed, Chrome opens it. If not, Chrome will use browser_fallback_url.
-  var fallback = encodeURIComponent("https://play.google.com/store/apps/details?id=com.whatsapp"); // placeholder
-  var intentUrl = "intent://gallery/" + encodeURIComponent(galleryId)
-      + "#Intent;scheme=ratedq;package=com.ratedq.app.ratedq;"
-      + "S.browser_fallback_url=" + fallback + ";end";
-
-  // Kick off immediately
-  window.location.href = intentUrl;
-
-  // 2) Safety net: in case the browser ignores intent (rare), try Play Store app then web
-  setTimeout(function () {
-    try { window.location.replace("market://details?id=com.whatsapp"); } catch (e) {}
-    setTimeout(function () {
-      try { window.location.replace("https://play.google.com/store/apps/details?id=com.whatsapp"); } catch (e) {}
-    }, 250);
-  }, 600);
-})();
-</script>
-
-
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-         background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%);
-         min-height:100vh;display:flex;align-items:center;justify-content:center}
-    .card{background:#fff;border-radius:20px;padding:28px 32px;text-align:center;
-          box-shadow:0 10px 40px rgba(0,0,0,.2)}
-    .logo{font-size:40px;margin-bottom:12px}
-    h1{font-size:20px;color:#111827;margin-bottom:8px}
-    .sub{color:#6B7280;font-size:13px}
-    .spin{width:28px;height:28px;border:3px solid #f3f4f6;border-top-color:#6366F1;
-          border-radius:50%;margin:14px auto;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opening RatedQ...</title>
+    <meta http-equiv="refresh" content="3;url=https://play.google.com/store/apps/details?id=com.whatsapp">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+        h1 { 
+            font-size: 24px; 
+            color: #111827; 
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .spinner {
+            width: 35px; 
+            height: 35px;
+            border: 3px solid #E5E7EB;
+            border-top-color: #6366F1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status { 
+            color: #6B7280; 
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .gallery-id {
+            background: #F3F4F6;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: #4B5563;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">📱</div>
-    <h1>Opening RatedQ…</h1>
-    <div class="spin"></div>
-    <div class="sub">If you see this screen, redirecting to Play Store…</div>
-  </div>
+    <div class="container">
+        <div class="logo">🎨</div>
+        <h1 id="title">Opening RatedQ...</h1>
+        <div class="spinner" id="spinner"></div>
+        <p class="status" id="status">Checking for app...</p>
+        <div class="gallery-id" id="gallery-info" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Extract gallery ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const galleryId = urlParams.get('gallery') || 'unknown';
+        
+        // Show gallery ID if present
+        if (galleryId && galleryId !== 'unknown') {
+            document.getElementById('gallery-info').textContent = `Gallery: ${galleryId}`;
+            document.getElementById('gallery-info').style.display = 'block';
+        }
+        
+        // Deep link to app
+        const appScheme = `ratedq://gallery/${galleryId}`;
+        
+        // Store URLs (Replace with your actual app IDs when published)
+        const androidStore = 'https://play.google.com/store/apps/details?id=com.whatsapp';
+        const iosStore = 'https://apps.apple.com/app/whatsapp-messenger/id310633997';
+        
+        // Detect platform
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const storeUrl = isIOS ? iosStore : androidStore;
+        
+        // Track if redirected
+        let redirected = false;
+        
+        // Try to open app immediately
+        console.log('Attempting to open app:', appScheme);
+        window.location.href = appScheme;
+        
+        // If still on page after 1.5 seconds, redirect to store
+        setTimeout(() => {
+            if (!document.hidden && !redirected) {
+                console.log('App not installed, redirecting to store');
+                document.getElementById('title').textContent = 'App not installed';
+                document.getElementById('status').textContent = 'Redirecting to store...';
+                document.getElementById('spinner').style.borderTopColor = '#EF4444';
+                redirected = true;
+                
+                // Redirect to appropriate store
+                window.location.href = storeUrl;
+            }
+        }, 1500);
+        
+        // Detect if page hidden (app likely opened)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('App opened successfully');
+                redirected = true;
+            }
+        });
+        
+        // Detect window blur (alternative detection)
+        window.addEventListener('blur', () => {
+            redirected = true;
+        });
+    </script>
 </body>
 </html>
-
